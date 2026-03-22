@@ -30,17 +30,18 @@ class CustomFrenetGenerator(BaseFrenetGenerator):
         self.crossover_frequency = crossover_frequency
 
         # Fix number or fix distance policy
-        self.max_length = 30
         self.min_step_size = 7
         if map_size < 150:
             #Fix Points
+            self.max_length = 30
             self.number_of_points = 15
             self.frenet_step = max(self.min_step_size, map_size // self.number_of_points)
         else:
             # Fix Distance
             # Number of generated kappa points depends on the size of the map + random variation
             self.frenet_step = 10
-            self.number_of_points = min(map_size // self.frenet_step, self.max_length)
+            self.max_length = map_size // self.frenet_step  # scale with map, not hardcoded 30
+            self.number_of_points = self.max_length
 
         super().__init__(executor=executor, map_size=map_size, strict_father=strict_father)
 
