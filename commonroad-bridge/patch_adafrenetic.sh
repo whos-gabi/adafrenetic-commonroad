@@ -73,10 +73,25 @@ import sys
 path = sys.argv[1] + '/code_pipeline/tests_evaluation.py'
 with open(path, 'r') as f:
     content = f.read()
-old = '''        for (oob1, oob2) in combinations(self.oobs, 2):
+old = '''    def _compute_sparseness(self):
+        # Compute distance among the OOB and take the avg of their maximum distance
+        max_distances_starting_from = {}
+
+        for (oob1, oob2) in combinations(self.oobs, 2):
             # Compute distance between cells
             distance = iterative_levenshtein(oob1['interesting segment'], oob2['interesting segment'])'''
-new = '''        for (oob1, oob2) in combinations(self.oobs, 2):
+new = '''    def _compute_sparseness(self):
+        # Compute distance among the OOB and take the avg of their maximum distance
+        max_distances_starting_from = {}
+
+        # Sample if too many OOBs — O(n^2) pairwise Levenshtein is too slow for hundreds
+        import random as _rnd
+        oobs_for_sparseness = self.oobs
+        if len(self.oobs) > 100:
+            self.logger.info("Sampling 100 of %d OOBs for sparseness (full set too slow)", len(self.oobs))
+            oobs_for_sparseness = _rnd.sample(self.oobs, 100)
+
+        for (oob1, oob2) in combinations(oobs_for_sparseness, 2):
             # Skip degenerate segments (need >= 2 points for distance calculation)
             if len(oob1['interesting segment']) < 2 or len(oob2['interesting segment']) < 2:
                 continue

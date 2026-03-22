@@ -529,7 +529,14 @@ class OOBAnalyzer:
         # Compute distance among the OOB and take the avg of their maximum distance
         max_distances_starting_from = {}
 
-        for (oob1, oob2) in combinations(self.oobs, 2):
+        # Sample if too many OOBs — O(n^2) pairwise Levenshtein is too slow for hundreds
+        import random as _rnd
+        oobs_for_sparseness = self.oobs
+        if len(self.oobs) > 100:
+            self.logger.info("Sampling 100 of %d OOBs for sparseness (full set too slow)", len(self.oobs))
+            oobs_for_sparseness = _rnd.sample(self.oobs, 100)
+
+        for (oob1, oob2) in combinations(oobs_for_sparseness, 2):
             # Skip degenerate segments (need >= 2 points for distance calculation)
             if len(oob1['interesting segment']) < 2 or len(oob2['interesting segment']) < 2:
                 continue
