@@ -66,8 +66,27 @@ with open(path, 'w') as f:
 print('  Patched base_generator.py')
 " "$ADAFRENETIC_DIR"
 
-# --- Patch 2: tests_evaluation.py — np.NaN → np.nan ---
+# --- Patch 2: tests_evaluation.py — np.NaN → np.nan + degenerate segment crash ---
 sed -i '' 's/np\.NaN/np.nan/g' "$ADAFRENETIC_DIR/code_pipeline/tests_evaluation.py"
+python3 -c "
+import sys
+path = sys.argv[1] + '/code_pipeline/tests_evaluation.py'
+with open(path, 'r') as f:
+    content = f.read()
+old = '''        for (oob1, oob2) in combinations(self.oobs, 2):
+            # Compute distance between cells
+            distance = iterative_levenshtein(oob1['interesting segment'], oob2['interesting segment'])'''
+new = '''        for (oob1, oob2) in combinations(self.oobs, 2):
+            # Skip degenerate segments (need >= 2 points for distance calculation)
+            if len(oob1['interesting segment']) < 2 or len(oob2['interesting segment']) < 2:
+                continue
+            # Compute distance between cells
+            distance = iterative_levenshtein(oob1['interesting segment'], oob2['interesting segment'])'''
+content = content.replace(old, new)
+with open(path, 'w') as f:
+    f.write(content)
+print('  Patched sparseness degenerate segment crash')
+" "$ADAFRENETIC_DIR"
 echo "  Patched tests_evaluation.py"
 
 # --- Patch 3: executors.py — reduce mock sleep ---

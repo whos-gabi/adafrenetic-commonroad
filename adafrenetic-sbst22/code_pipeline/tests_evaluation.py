@@ -530,6 +530,9 @@ class OOBAnalyzer:
         max_distances_starting_from = {}
 
         for (oob1, oob2) in combinations(self.oobs, 2):
+            # Skip degenerate segments (need >= 2 points for distance calculation)
+            if len(oob1['interesting segment']) < 2 or len(oob2['interesting segment']) < 2:
+                continue
             # Compute distance between cells
             distance = iterative_levenshtein(oob1['interesting segment'], oob2['interesting segment'])
             self.logger.debug("Distance of OOB %s from OOB %s is %.3f", oob1["test id"], oob2["test id"], distance)
