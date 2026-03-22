@@ -139,26 +139,6 @@ except (FileNotFoundError, IndexError):
 
 Removes `time.sleep(5)` in the mock executor and `sleep(10)` in the generator — not relevant when using the CommonRoad executor, but left in to avoid wasting time if mock is used for testing.
 
-### Patch 7 — Road length scaling bug (important)
-
-**Original code**:
-```python
-self.max_length = 30       # hardcoded
-self.frenet_step = 10
-self.number_of_points = min(map_size // self.frenet_step, self.max_length)
-```
-
-**Patched code**:
-```python
-self.frenet_step = 10
-self.max_length = map_size // self.frenet_step  # scales with map
-self.number_of_points = self.max_length
-```
-
-**Why this matters**: `max_length=30` was hardcoded for the original 200m competition maps. With larger maps (e.g. `MAP_SIZE=1000`) the formula `min(1000//10, 30) = 30` always hit the cap — roads were still only 30 kappa points × 10m = **300m arc length maximum**, meaning their bounding box was typically only 100–150m regardless of how large the map was. The car was effectively driving in a small corner of a huge empty map.
-
-The fix scales `max_length` with the map: for `MAP_SIZE=1000`, roads now get up to 100 kappa points × 10m = **1000m arc length**, generating complex roads that actually use the available space.
-
 ### New: CommonRoad Executor (`code_pipeline/commonroad_executor.py`)
 
 The core addition: a drop-in replacement for `BeamngExecutor` that implements `AbstractTestExecutor` and returns real physics-based results.

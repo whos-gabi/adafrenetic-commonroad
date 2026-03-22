@@ -74,45 +74,9 @@ echo "  Patched tests_evaluation.py"
 sed -i '' 's/time\.sleep(5)/time.sleep(0.1)/' "$ADAFRENETIC_DIR/code_pipeline/executors.py"
 echo "  Patched executors.py"
 
-# --- Patch 4: adaptive_random_frenet_generator.py — reduce sleep + fix pandas .at → .loc + road length scaling ---
+# --- Patch 4: adaptive_random_frenet_generator.py — reduce sleep + fix pandas .at → .loc ---
 sed -i '' 's/sleep(10)/sleep(1)/' "$ADAFRENETIC_DIR/src/generators/adaptive_random_frenet_generator.py"
 sed -i '' 's/self\.df\.at\[parent\.index/self.df.loc[parent.index/' "$ADAFRENETIC_DIR/src/generators/adaptive_random_frenet_generator.py"
-python3 -c "
-import sys
-path = sys.argv[1] + '/src/generators/adaptive_random_frenet_generator.py'
-with open(path, 'r') as f:
-    content = f.read()
-
-old = '''        # Fix number or fix distance policy
-        self.max_length = 30
-        self.min_step_size = 7
-        if map_size < 150:
-            #Fix Points
-            self.number_of_points = 15
-            self.frenet_step = max(self.min_step_size, map_size // self.number_of_points)
-        else:
-            # Fix Distance
-            # Number of generated kappa points depends on the size of the map + random variation
-            self.frenet_step = 10
-            self.number_of_points = min(map_size // self.frenet_step, self.max_length)'''
-new = '''        # Fix number or fix distance policy
-        self.min_step_size = 7
-        if map_size < 150:
-            #Fix Points
-            self.max_length = 30
-            self.number_of_points = 15
-            self.frenet_step = max(self.min_step_size, map_size // self.number_of_points)
-        else:
-            # Fix Distance
-            # Number of generated kappa points depends on the size of the map + random variation
-            self.frenet_step = 10
-            self.max_length = map_size // self.frenet_step  # scale with map, not hardcoded 30
-            self.number_of_points = self.max_length'''
-content = content.replace(old, new)
-with open(path, 'w') as f:
-    f.write(content)
-print('  Patched road length scaling')
-" "$ADAFRENETIC_DIR"
 echo "  Patched adaptive_random_frenet_generator.py"
 
 # --- Patch 5: AdaFrenetic random_budget — use 20% of time budget, not fixed 3600s ---
