@@ -1,0 +1,6 @@
+commonroad-vehicle-models>=3.0.2
+numpy>=1.21
+scipy>=1.7
+shapely>=1.8
+matplotlib>=3.5
+pandas>=1.3
